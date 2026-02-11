@@ -31,6 +31,7 @@ var room_counts = {
 
 var resource_timer: float = 0.0
 var payment_timer: float = 0.0
+var raid_timer: float = 0.0
 var minions_happy: bool = true
 
 @onready var nav_region: NavigationRegion3D = get_parent()
@@ -48,6 +49,11 @@ func _process(delta):
 	if payment_timer >= 30.0:
 		process_payroll()
 		payment_timer = 0.0
+		
+	raid_timer += delta
+	if raid_timer >= 60.0:
+		spawn_enemy_digger()
+		raid_timer = 0.0
 	
 	if needs_bake:
 		bake_timer += delta
@@ -66,15 +72,29 @@ func generate_resources():
 func process_payroll():
 	var workers = get_tree().get_nodes_in_group("workers").size()
 	var liches = get_tree().get_nodes_in_group("liches").size()
-	
 	var total_cost = (workers * 10) + (liches * 50)
-	
 	if GameManager.spend_resource("gold", total_cost):
 		minions_happy = true
 		print("Payroll processed. Minions are satisfied.")
 	else:
 		minions_happy = false
 		print("Nazarick is broke! Minions are unhappy!")
+
+func spawn_enemy_digger():
+	var scene = load("res://scenes/sim/entities/EnemyDigger.tscn")
+	if not scene: return
+	var digger = scene.instantiate()
+	add_child(digger)
+	# Spawn at edge
+	var side = randi() % 4
+	var spawn_pos = Vector3.ZERO
+	match side:
+		0: spawn_pos = Vector3(0, 1.0, randf_range(0, grid_depth * tile_size))
+		1: spawn_pos = Vector3(grid_width * tile_size, 1.0, randf_range(0, grid_depth * tile_size))
+		2: spawn_pos = Vector3(randf_range(0, grid_width * tile_size), 1.0, 0)
+		3: spawn_pos = Vector3(randf_range(0, grid_width * tile_size), 1.0, grid_depth * tile_size)
+	digger.global_transform.origin = spawn_pos
+	print("An enemy is tunneling into Nazarick from the outside!")
 
 func _ready():
 	setup_initial_grid()
@@ -88,7 +108,6 @@ func setup_initial_grid():
 			else:
 				dungeon_grid[pos] = TileType.WALL
 				wall_health[pos] = MAX_WALL_HEALTH
-	
 	refresh_visuals()
 
 func trigger_rebake():
@@ -102,7 +121,6 @@ func mark_for_digging(grid_pos: Vector2i):
 func set_digging_mark(grid_pos: Vector2i, state: bool):
 	var type = dungeon_grid.get(grid_pos)
 	if type != TileType.WALL and type != TileType.REINFORCED_WALL: return
-	
 	if state and not digging_queue.has(grid_pos):
 		digging_queue.append(grid_pos)
 		refresh_visuals()
@@ -113,8 +131,6 @@ func set_digging_mark(grid_pos: Vector2i, state: bool):
 func damage_wall(grid_pos: Vector2i, amount: float):
 	if wall_health.has(grid_pos):
 		wall_health[grid_pos] -= amount
-		
-		# Spawn Mining Particles
 		var particle_scene = load("res://resources/effects/MiningParticles.tscn")
 		if particle_scene:
 			var p = particle_scene.instantiate()
@@ -122,17 +138,11 @@ func damage_wall(grid_pos: Vector2i, amount: float):
 			p.global_transform.origin = Vector3(grid_pos.x * tile_size, 1.0, grid_pos.y * tile_size)
 			p.emitting = true
 			get_tree().create_timer(1.0).timeout.connect(p.queue_free)
-
 		if wall_health[grid_pos] <= 0:
 			dig_tile(grid_pos)
 
 func is_adjacent_to_open_space(grid_pos: Vector2i) -> bool:
-	var neighbors = [
-		Vector2i(grid_pos.x + 1, grid_pos.y),
-		Vector2i(grid_pos.x - 1, grid_pos.y),
-		Vector2i(grid_pos.x, grid_pos.y + 1),
-		Vector2i(grid_pos.x, grid_pos.y - 1)
-	]
+	var neighbors = [Vector2i(grid_pos.x + 1, grid_pos.y),Vector2i(grid_pos.x - 1, grid_pos.y),Vector2i(grid_pos.x, grid_pos.y + 1),Vector2i(grid_pos.x, grid_pos.y - 1)]
 	for n in neighbors:
 		if dungeon_grid.has(n) and dungeon_grid[n] != TileType.WALL and dungeon_grid[n] != TileType.REINFORCED_WALL:
 			return true

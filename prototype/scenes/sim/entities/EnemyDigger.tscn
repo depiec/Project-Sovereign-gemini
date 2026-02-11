@@ -1,0 +1,30 @@
+[gd_scene load_steps=6 format=3 uid="uid://c1e2d3d4e5f6"]
+
+[ext_resource type="Script" path="res://scripts/scenes/sim/EnemyDigger.gd" id="1_d7y2r"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_Digger"]
+radius = 0.35
+height = 1.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Digger"]
+albedo_color = Color(1, 0.8, 0.2, 1)
+emission_enabled = true
+emission = Color(0.4, 0.3, 0, 1)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_Digger"]
+radius = 0.35
+height = 1.6
+
+[node name="EnemyDigger" type="CharacterBody3D"]
+script = ExtResource("1_d7y2r")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("CapsuleMesh_Digger")
+material_override = SubResource("StandardMaterial3D_Digger")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_Digger")
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+path_desired_distance = 0.5
+target_desired_distance = 0.5

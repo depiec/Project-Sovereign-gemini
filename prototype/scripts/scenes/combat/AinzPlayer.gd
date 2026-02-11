@@ -34,19 +34,13 @@ func _ready():
 
 func _physics_process(delta):
 	if not is_possessed: return
-	
 	if is_casting:
 		handle_casting(delta)
 		return
-	if not is_on_floor():
-		velocity.y -= gravity * delta
-	if Input.is_action_just_pressed("jump") and is_on_floor():
-		velocity.y = JUMP_VELOCITY
-	if Input.is_action_just_pressed("swap_persona"):
-		toggle_persona()
-	if Input.is_action_just_pressed("swap_control"):
-		try_swap_control()
-		
+	if not is_on_floor(): velocity.y -= gravity * delta
+	if Input.is_action_just_pressed("jump") and is_on_floor(): velocity.y = JUMP_VELOCITY
+	if Input.is_action_just_pressed("swap_persona"): toggle_persona()
+	if Input.is_action_just_pressed("swap_control"): try_swap_control()
 	var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	if input_dir:
 		var camera_rot_y = spring_arm.global_transform.basis.get_euler().y
@@ -70,13 +64,11 @@ func try_swap_control():
 func be_possessed():
 	is_possessed = true
 	camera.current = true
-	print("Ainz: Regained control.")
 
 func be_unpossessed():
 	is_possessed = false
 	velocity = Vector3.ZERO
 	camera.current = false
-	print("Ainz: Delegating control.")
 
 func toggle_persona():
 	if GameManager.player_state.current_persona == GameManager.Persona.OVERLORD:
@@ -103,8 +95,7 @@ func apply_persona_visuals():
 func handle_casting(delta):
 	cast_timer -= delta
 	mp_label.text = "CASTING: %.1fs" % cast_timer
-	if cast_timer <= 0:
-		complete_cast()
+	if cast_timer <= 0: complete_cast()
 
 func _unhandled_input(event):
 	if not is_possessed:
@@ -116,13 +107,11 @@ func _unhandled_input(event):
 					be_possessed()
 					return
 		return
-
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 		spring_arm.rotation.y -= event.relative.x * 0.005
 		spring_arm.rotation.x -= event.relative.y * 0.005
 		spring_arm.rotation.x = clamp(spring_arm.rotation.x, -PI/4, PI/4)
-	if event.is_action_pressed("ui_cancel"):
-		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	if event.is_action_pressed("ui_cancel"): Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	if event is InputEventMouseButton and event.pressed:
 		if Input.get_mouse_mode() == Input.MOUSE_MODE_VISIBLE:
 			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -133,8 +122,7 @@ func _unhandled_input(event):
 			elif event.button_index == MOUSE_BUTTON_RIGHT and GameManager.player_state.known_spells.size() > 1:
 				start_cast(GameManager.player_state.known_spells[1])
 		else:
-			if event.button_index == MOUSE_BUTTON_LEFT:
-				perform_melee_attack()
+			if event.button_index == MOUSE_BUTTON_LEFT: perform_melee_attack()
 
 func perform_melee_attack():
 	print("Momon: Twin Blade Strike!")
@@ -145,10 +133,8 @@ func start_cast(spell: SpellResource):
 		if spell.cast_time > 0:
 			is_casting = true
 			cast_timer = spell.cast_time
-		else:
-			complete_cast()
-	else:
-		print("Not enough MP!")
+		else: complete_cast()
+	else: print("Not enough MP!")
 
 func complete_cast():
 	is_casting = false
@@ -164,9 +150,12 @@ func complete_cast():
 		projectile.global_transform.origin = spawn_pos
 		if projectile is RigidBody3D:
 			projectile.linear_velocity = aim_dir * 20.0
+			if "caster" in projectile: projectile.caster = self
 		elif current_spell.is_super_tier:
 			projectile.global_transform.origin = global_transform.origin + (aim_dir * 10.0)
 			projectile.global_transform.origin.y = 0.5
+
+func gain_xp(amount): print("Ainz gained ", amount, " XP.")
 
 func update_hud():
 	if hp_label: hp_label.text = "HP: %d" % current_hp

@@ -1,0 +1,86 @@
+[gd_scene load_steps=2 format=3 uid="uid://d3jfk2k3l1l1"]
+
+[ext_resource type="Script" path="res://scripts/scenes/MainStrategy.gd" id="1_q7w8e"]
+
+[node name="MainStrategy" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_q7w8e")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -100.0
+offset_right = 150.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="ResourceLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Resources: Gold 0 | Souls 0"
+horizontal_alignment = 1
+
+[node name="RaidButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Start Raid"
+
+[node name="SasugaPanel" type="Panel" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -150.0
+offset_right = 250.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SasugaPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="ProposalLabel" type="Label" parent="SasugaPanel/VBoxContainer"]
+layout_mode = 2
+text = "Demiurge: 'Ainz-sama, shall we skin the invaders alive for scroll parchment?'"
+autowrap_mode = 2
+
+[node name="Option1Button" type="Button" parent="SasugaPanel/VBoxContainer"]
+layout_mode = 2
+text = "1. \"Umu, exactly as I thought.\" (Approve)"
+
+[node name="Option2Button" type="Button" parent="SasugaPanel/VBoxContainer"]
+layout_mode = 2
+text = "2. \"Perhaps we should consider...\" (Modify)"
+
+[node name="Option3Button" type="Button" parent="SasugaPanel/VBoxContainer"]
+layout_mode = 2
+text = "3. \"I shall leave the details to you.\" (Delegate)"
+
+[connection signal="pressed" from="VBoxContainer/RaidButton" to="." method="_on_RaidButton_pressed"]
+[connection signal="pressed" from="SasugaPanel/VBoxContainer/Option1Button" to="." method="_on_Option1Button_pressed"]
+[connection signal="pressed" from="SasugaPanel/VBoxContainer/Option2Button" to="." method="_on_Option2Button_pressed"]
+[connection signal="pressed" from="SasugaPanel/VBoxContainer/Option3Button" to="." method="_on_Option3Button_pressed"]

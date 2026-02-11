@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SpellResource" format=3 uid="uid://eac8b7a6e5f4"]
+
+[ext_resource type="Script" path="res://scripts/resources/SpellResource.gd" id="1_s5p8e"]
+[ext_resource type="PackedScene" uid="uid://b8n7m6l5k4j3" path="res://resources/spells/FallenDownEffect.tscn" id="2_p7o8q"]
+
+[resource]
+script = ExtResource("1_s5p8e")
+spell_name = "Fallen Down"
+spell_tier = 11
+mana_cost = 500
+cooldown = 30.0
+description = "Super-Tier Magic. Calls down a pillar of holy light to incinerate everything in a massive area."
+cast_time = 5.0
+is_super_tier = true
+projectile_scene = ExtResource("2_p7o8q")

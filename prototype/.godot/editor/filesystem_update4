@@ -1,0 +1,8 @@
+res://scripts/scenes/MainStrategy.gd
+res://scripts/scenes/SimLayer.gd
+res://scripts/scenes/combat/AinzPlayer.gd
+res://scripts/autoloads/GameManager.gd
+res://scripts/scenes/combat/Enemy.gd
+res://scripts/scenes/CombatLayer.gd
+res://scripts/scenes/sim/DungeonManager.gd
+res://scripts/scenes/sim/UndeadWorker.gd

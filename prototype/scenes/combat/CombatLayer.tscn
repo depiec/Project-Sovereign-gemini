@@ -1,0 +1,66 @@
+[gd_scene load_steps=5 format=3 uid="uid://d8f7e6d5c4b3"]
+
+[ext_resource type="Script" path="res://scripts/scenes/CombatLayer.gd" id="1_q7w8e"]
+[ext_resource type="PackedScene" uid="uid://b5s4n1m2l3" path="res://scenes/combat/entities/AinzPlayer.tscn" id="2_r9s8t"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Floor"]
+size = Vector3(20, 0.5, 20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+size = Vector3(20, 0.5, 20)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0.2, 0.2, 0.2, 1)
+
+[node name="CombatLayer" type="Node3D"]
+script = ExtResource("1_q7w8e")
+
+[node name="Floor" type="StaticBody3D" parent="."]
+collision_mask = 7
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("BoxShape3D_Floor")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("BoxMesh_1")
+skeleton = NodePath("../..")
+material_override = SubResource("StandardMaterial3D_1")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 10, 0)
+shadow_enabled = true
+
+[node name="AinzPlayer" parent="." instance=ExtResource("2_r9s8t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="CrosshairContainer" type="CenterContainer" parent="HUD"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Crosshair" type="ColorRect" parent="HUD/CrosshairContainer"]
+custom_minimum_size = Vector2(4, 4)
+layout_mode = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0.8)
+
+[node name="StatsContainer" type="VBoxContainer" parent="HUD"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 220.0
+offset_bottom = 80.0
+
+[node name="HPLabel" type="Label" parent="HUD/StatsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "HP: 100/100"
+
+[node name="MPLabel" type="Label" parent="HUD/StatsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "MP: 100/100"

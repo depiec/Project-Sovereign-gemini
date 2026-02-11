@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://b8n7m6l5k4j3"]
+
+[ext_resource type="Script" path="res://scripts/resources/FallenDownEffect.gd" id="1_d2s3a"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_1"]
+radius = 1.0
+height = 2.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+transparency = 1
+albedo_color = Color(1, 1, 0.8, 0.6)
+emission_enabled = true
+emission = Color(1, 0.9, 0.4, 1)
+emission_energy_multiplier = 10.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_1"]
+radius = 2.0
+
+[node name="FallenDownEffect" type="Node3D"]
+script = ExtResource("1_d2s3a")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_1")
+surface_material_override/0 = SubResource("StandardMaterial3D_1")
+
+[node name="Area3D" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 4
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+shape = SubResource("SphereShape3D_1")

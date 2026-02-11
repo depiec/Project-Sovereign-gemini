@@ -1,0 +1,116 @@
+[gd_scene load_steps=8 format=3 uid="uid://c5q3j2l1l1"]
+
+[ext_resource type="Script" path="res://scripts/scenes/SimLayer.gd" id="1_q7w8e"]
+[ext_resource type="Script" path="res://scripts/scenes/sim/DungeonManager.gd" id="2_dman"]
+[ext_resource type="Script" path="res://scripts/scenes/sim/UndeadWorker.gd" id="3_imp"]
+
+[sub_resource type="NavigationMesh" id="NavigationMesh_1"]
+agent_radius = 0.5
+agent_height = 1.0
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
+radius = 0.3
+height = 1.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Imp"]
+albedo_color = Color(0.1, 0.4, 0.1, 1)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 0.3
+height = 1.0
+
+[node name="SimLayer" type="Node3D"]
+script = ExtResource("1_q7w8e")
+
+[node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
+navigation_mesh = SubResource("NavigationMesh_1")
+
+[node name="DungeonManager" type="Node3D" parent="NavigationRegion3D"]
+script = ExtResource("2_dman")
+
+[node name="Imp1" type="CharacterBody3D" parent="NavigationRegion3D/DungeonManager"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 1, 20)
+script = ExtResource("3_imp")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="NavigationRegion3D/DungeonManager/Imp1"]
+mesh = SubResource("CapsuleMesh_1")
+material_override = SubResource("StandardMaterial3D_Imp")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/DungeonManager/Imp1"]
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="NavigationRegion3D/DungeonManager/Imp1"]
+path_desired_distance = 0.5
+target_desired_distance = 0.5
+
+[node name="Imp2" type="CharacterBody3D" parent="NavigationRegion3D/DungeonManager"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 1, 22)
+script = ExtResource("3_imp")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="NavigationRegion3D/DungeonManager/Imp2"]
+mesh = SubResource("CapsuleMesh_1")
+material_override = SubResource("StandardMaterial3D_Imp")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/DungeonManager/Imp2"]
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="NavigationRegion3D/DungeonManager/Imp2"]
+path_desired_distance = 0.5
+target_desired_distance = 0.5
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0.866025, 0, -0.866025, 0.5, 20, 15, 35)
+current = true
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 10, 0)
+shadow_enabled = true
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="Panel" parent="UI"]
+offset_right = 200.0
+offset_bottom = 250.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="Label" type="Label" parent="UI/Panel/VBoxContainer"]
+layout_mode = 2
+text = "Dungeon Management"
+horizontal_alignment = 1
+
+[node name="DigModeButton" type="Button" parent="UI/Panel/VBoxContainer"]
+layout_mode = 2
+text = "Mode: Dig"
+
+[node name="SlapButton" type="Button" parent="UI/Panel/VBoxContainer"]
+layout_mode = 2
+text = "Mode: Slap"
+
+[node name="TreasuryButton" type="Button" parent="UI/Panel/VBoxContainer"]
+layout_mode = 2
+text = "Build: Treasury"
+
+[node name="LibraryButton" type="Button" parent="UI/Panel/VBoxContainer"]
+layout_mode = 2
+text = "Build: Library"
+
+[node name="HSeparator" type="HSeparator" parent="UI/Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="StartCombatButton" type="Button" parent="UI/Panel/VBoxContainer"]
+layout_mode = 2
+text = "Defend Nazarick"
+
+[connection signal="pressed" from="UI/Panel/VBoxContainer/DigModeButton" to="." method="_on_DigModeButton_pressed"]
+[connection signal="pressed" from="UI/Panel/VBoxContainer/SlapButton" to="." method="_on_SlapButton_pressed"]
+[connection signal="pressed" from="UI/Panel/VBoxContainer/TreasuryButton" to="." method="_on_TreasuryButton_pressed"]
+[connection signal="pressed" from="UI/Panel/VBoxContainer/LibraryButton" to="." method="_on_LibraryButton_pressed"]
+[connection signal="pressed" from="UI/Panel/VBoxContainer/StartCombatButton" to="." method="_on_StartCombatButton_pressed"]

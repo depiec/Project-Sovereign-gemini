@@ -6,7 +6,7 @@ extends Node3D
 @onready var camera = $Camera3D
 @onready var minion_label: Label = %MinionCountLabel
 
-enum InteractionMode { DIG, CLAIM, BUILD_TREASURY, BUILD_LIBRARY, SLAP, BUILD_REINFORCED, POSSESS }
+enum InteractionMode { DIG, CLAIM, BUILD_TREASURY, BUILD_LIBRARY, SLAP, BUILD_REINFORCED, POSSESS, BUILD_HATCHERY }
 var current_mode = InteractionMode.DIG
 
 var is_dragging = false
@@ -80,6 +80,8 @@ func handle_interaction(grid_pos: Vector2i, is_right_click: bool):
 			dungeon_manager.build_room(grid_pos, dungeon_manager.TileType.LIBRARY)
 		InteractionMode.BUILD_REINFORCED:
 			dungeon_manager.build_reinforced_wall(grid_pos)
+		InteractionMode.BUILD_HATCHERY:
+			dungeon_manager.build_room(grid_pos, dungeon_manager.TileType.HATCHERY)
 
 func try_possession():
 	var mouse_pos = get_viewport().get_mouse_position()
@@ -125,6 +127,10 @@ func _on_SlapButton_pressed():
 func _on_ReinforcedButton_pressed():
 	current_mode = InteractionMode.BUILD_REINFORCED
 	print("Mode: Build Reinforced")
+
+func _on_HatcheryButton_pressed():
+	current_mode = InteractionMode.BUILD_HATCHERY
+	print("Mode: Build Hatchery")
 
 func _on_PossessButton_pressed():
 	current_mode = InteractionMode.POSSESS

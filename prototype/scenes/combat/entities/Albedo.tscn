@@ -1,6 +1,7 @@
-[gd_scene load_steps=6 format=3 uid="uid://c1a2b3c4d5e6"]
+[gd_scene load_steps=7 format=3 uid="uid://c1a2b3c4d5e6"]
 
 [ext_resource type="Script" path="res://scripts/scenes/combat/GuardianAI.gd" id="1_g4u2r"]
+[ext_resource type="Resource" uid="uid://d1w2e3j4i5o6" path="res://resources/abilities/WallsOfJericho.tres" id="2_wjer"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_Albedo"]
 radius = 0.5
@@ -19,6 +20,7 @@ height = 2.0
 script = ExtResource("1_g4u2r")
 speed = 6.0
 attack_damage = 30
+special_ability = ExtResource("2_wjer")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = SubResource("CapsuleMesh_Albedo")

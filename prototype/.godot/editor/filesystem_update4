@@ -6,3 +6,4 @@ res://scripts/scenes/combat/Enemy.gd
 res://scripts/scenes/CombatLayer.gd
 res://scripts/scenes/sim/DungeonManager.gd
 res://scripts/scenes/sim/UndeadWorker.gd
+res://scripts/scenes/combat/GuardianAI.gd

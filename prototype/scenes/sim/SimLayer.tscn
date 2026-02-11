@@ -40,7 +40,7 @@ shadow_enabled = true
 
 [node name="Panel" type="Panel" parent="UI"]
 offset_right = 200.0
-offset_bottom = 400.0
+offset_bottom = 450.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="UI/Panel"]
 layout_mode = 1
@@ -78,6 +78,10 @@ text = "Mode: Possess"
 layout_mode = 2
 text = "Build: Reinforced Wall"
 
+[node name="HatcheryButton" type="Button" parent="UI/Panel/VBoxContainer"]
+layout_mode = 2
+text = "Build: Hatchery"
+
 [node name="TreasuryButton" type="Button" parent="UI/Panel/VBoxContainer"]
 layout_mode = 2
 text = "Build: Treasury"
@@ -97,6 +101,7 @@ text = "Defend Nazarick"
 [connection signal="pressed" from="UI/Panel/VBoxContainer/SlapButton" to="." method="_on_SlapButton_pressed"]
 [connection signal="pressed" from="UI/Panel/VBoxContainer/PossessButton" to="." method="_on_PossessButton_pressed"]
 [connection signal="pressed" from="UI/Panel/VBoxContainer/ReinforcedButton" to="." method="_on_ReinforcedButton_pressed"]
+[connection signal="pressed" from="UI/Panel/VBoxContainer/HatcheryButton" to="." method="_on_HatcheryButton_pressed"]
 [connection signal="pressed" from="UI/Panel/VBoxContainer/TreasuryButton" to="." method="_on_TreasuryButton_pressed"]
 [connection signal="pressed" from="UI/Panel/VBoxContainer/LibraryButton" to="." method="_on_LibraryButton_pressed"]
 [connection signal="pressed" from="UI/Panel/VBoxContainer/StartCombatButton" to="." method="_on_StartCombatButton_pressed"]

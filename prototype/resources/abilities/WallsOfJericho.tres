@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="GuardianAbility" load_steps=3 format=3 uid="uid://d1w2e3j4i5o6"]
+
+[ext_resource type="Script" path="res://scripts/resources/GuardianAbility.gd" id="1_r5p8e"]
+[ext_resource type="PackedScene" uid="uid://c1w2e3j4i5o6" path="res://resources/effects/WallsOfJericho.tscn" id="2_p7o8q"]
+
+[resource]
+script = ExtResource("1_r5p8e")
+ability_name = "Walls of Jericho"
+cooldown = 10.0
+range = 8.0
+damage = 0
+is_buff = true
+visual_scene = ExtResource("2_p7o8q")

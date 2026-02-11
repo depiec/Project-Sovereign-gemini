@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://c1l2m3l4k5j6"]
+[gd_scene format=3 uid="uid://c1l2m3l4k5j6"]
 
 [ext_resource type="Script" path="res://scripts/scenes/sim/ElderLich.gd" id="1_x8y9z"]
 

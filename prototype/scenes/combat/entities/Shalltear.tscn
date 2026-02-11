@@ -1,0 +1,33 @@
+[gd_scene load_steps=6 format=3 uid="uid://c1s2h3a4l5l6"]
+
+[ext_resource type="Script" path="res://scripts/scenes/combat/GuardianAI.gd" id="1_g4u2r"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_Shalltear"]
+radius = 0.4
+height = 1.7
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Shalltear"]
+albedo_color = Color(0.6, 0, 0.1, 1)
+emission_enabled = true
+emission = Color(0.4, 0, 0, 1)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_Shalltear"]
+radius = 0.4
+height = 1.7
+
+[node name="Shalltear" type="CharacterBody3D"]
+script = ExtResource("1_g4u2r")
+speed = 9.0
+attack_damage = 60
+attack_range = 1.5
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("CapsuleMesh_Shalltear")
+material_override = SubResource("StandardMaterial3D_Shalltear")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_Shalltear")
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+path_desired_distance = 0.5
+target_desired_distance = 0.5

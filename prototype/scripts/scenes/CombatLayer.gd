@@ -6,8 +6,7 @@ extends Node3D
 var raid_data: Dictionary
 
 func _ready():
-	# Retrieve raid data from GameManager if available (passed during scene transition)
-	# For prototype, we simulate it
+	# Retrieve raid data from GameManager if available
 	raid_data = {
 		"enemy_type": "Worker",
 		"enemy_strength": 3,
@@ -15,6 +14,22 @@ func _ready():
 	}
 	print("CombatLayer: Raid Started! Type: ", raid_data.enemy_type)
 	spawn_enemies()
+	spawn_active_guardian()
+
+func spawn_active_guardian():
+	var guardian_name = GameManager.player_state.active_guardian
+	if guardian_name == "None":
+		print("CombatLayer: No guardian selected.")
+		return
+	
+	var scene_path = "res://scenes/combat/entities/" + guardian_name + ".tscn"
+	var scene = load(scene_path)
+	if scene:
+		var guardian = scene.instantiate()
+		add_child(guardian)
+		# Spawn slightly behind Ainz
+		guardian.global_transform.origin = Vector3(2, 1, 2)
+		print("CombatLayer: Spawned guardian: ", guardian_name)
 
 var enemy_count: int = 0
 

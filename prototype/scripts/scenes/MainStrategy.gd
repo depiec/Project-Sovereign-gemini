@@ -7,6 +7,7 @@ extends Control
 @onready var raid_button: Button = $VBoxContainer/RaidButton
 
 @onready var sasuga_panel: Panel = $SasugaPanel
+@onready var guardian_panel: Panel = $GuardianPanel
 
 func _ready():
 	# Update resource display initially
@@ -16,8 +17,22 @@ func _ready():
 	GameManager.resources_updated.connect(_on_resources_updated)
 	GameManager.raid_started.connect(_on_raid_started)
 	
-	# Hide Sasuga Panel initially
+	# Hide Panels initially
 	sasuga_panel.visible = false
+	guardian_panel.visible = false
+
+func _on_GuardianButton_pressed():
+	guardian_panel.visible = true
+
+func _on_AlbedoButton_pressed():
+	GameManager.player_state.active_guardian = "Albedo"
+	print("Guardian Selected: Albedo")
+	guardian_panel.visible = false
+
+func _on_ShalltearButton_pressed():
+	GameManager.player_state.active_guardian = "Shalltear"
+	print("Guardian Selected: Shalltear")
+	guardian_panel.visible = false
 
 func _on_resources_updated(new_resources: Dictionary):
 	update_resource_display(new_resources)

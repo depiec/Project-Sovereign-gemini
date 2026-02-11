@@ -12,8 +12,21 @@ var is_dragging = false
 var drag_mode_is_adding = true # True to mark, False to unmark
 var last_grid_pos = Vector2i(-1, -1)
 
+@onready var minion_label: Label = %MinionCountLabel
+
 func _ready():
 	print("SimLayer: Dungeon Keeper mode active.")
+	dungeon_manager.stats_updated.connect(_on_dungeon_stats_updated)
+
+func _process(_delta):
+	# Periodically update minion counts (fallback if signal is missed)
+	var workers = get_tree().get_nodes_in_group("workers").size()
+	var liches = get_tree().get_nodes_in_group("liches").size()
+	minion_label.text = "Workers: %d | Liches: %d" % [workers, liches]
+
+func _on_dungeon_stats_updated(stats: Dictionary):
+	print("Dungeon Stats: ", stats)
+	# Could update other UI elements here (Treasury size, etc.)
 
 func _input(event):
 	if event is InputEventMouseButton:

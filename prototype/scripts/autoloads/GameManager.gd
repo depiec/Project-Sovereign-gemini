@@ -37,7 +37,8 @@ var player_state = {
 	"hp": 99999,
 	"known_spells": [], # Array of SpellResources
 	"sasuga_meter": 0.5, # 0.0 = Panic, 1.0 = Supreme Being
-	"current_persona": Persona.OVERLORD
+	"current_persona": Persona.OVERLORD,
+	"active_guardian": "None" # Albedo or Shalltear
 }
 
 # Entities placed during Sim Layer to be spawned in Combat Layer

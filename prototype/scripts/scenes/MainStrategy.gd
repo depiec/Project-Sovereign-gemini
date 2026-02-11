@@ -8,6 +8,10 @@ extends Control
 
 @onready var sasuga_panel: Panel = $SasugaPanel
 @onready var guardian_panel: Panel = $GuardianPanel
+@onready var operations_panel: Panel = $OperationsPanel
+@onready var target_label: Label = %TargetLabel
+
+var selected_territory = ""
 
 func _ready():
 	# Update resource display initially
@@ -17,9 +21,41 @@ func _ready():
 	GameManager.resources_updated.connect(_on_resources_updated)
 	GameManager.raid_started.connect(_on_raid_started)
 	
+	# Connect WorldMap
+	$WorldMap.territory_selected.connect(_on_territory_selected)
+	
 	# Hide Panels initially
 	sasuga_panel.visible = false
 	guardian_panel.visible = false
+	operations_panel.visible = false
+
+func _on_territory_selected(t_name):
+	selected_territory = t_name
+	target_label.text = "Target: " + t_name
+	operations_panel.visible = true
+
+func _on_SpyButton_pressed():
+	print("Operation: Spying on ", selected_territory)
+	GameManager.spend_resource("gold", 100)
+	# Success chance logic could go here
+	print("Hanzo reports: Garrison is weak.")
+	operations_panel.visible = false
+
+func _on_WarButton_pressed():
+	print("Operation: Declaring War on ", selected_territory)
+	sasuga_panel.visible = true # Open Sasuga panel for the invasion plan
+	operations_panel.visible = false
+
+func _on_AnnexButton_pressed():
+	print("Operation: Annexing ", selected_territory)
+	GameManager.update_sasuga(0.05)
+	# Update world state
+	GameManager.world_state.territories[selected_territory].owner = "Nazarick"
+	$WorldMap.queue_redraw()
+	operations_panel.visible = false
+
+func _on_CloseOpButton_pressed():
+	operations_panel.visible = false
 
 func _on_GuardianButton_pressed():
 	guardian_panel.visible = true

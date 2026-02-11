@@ -10,6 +10,13 @@ signal raid_started(raid_data)
 # --- Game State ---
 
 var world_state = {
+	"territories": {
+		"CarneVillage": {"pos": Vector2i(0, 0), "owner": "Neutral", "type": "Village"},
+		"ERantel": {"pos": Vector2i(1, 0), "owner": "ReEstize", "type": "City"},
+		"KatzePlains": {"pos": Vector2i(1, 1), "owner": "Neutral", "type": "Wasteland"},
+		"Arwintar": {"pos": Vector2i(2, 0), "owner": "Baharuth", "type": "Capital"},
+		"Nazarick": {"pos": Vector2i(0, 1), "owner": "Nazarick", "type": "Tomb"}
+	},
 	"factions": {
 		"ReEstize": {"status": "Neutral", "threat_level": 1},
 		"Baharuth": {"status": "Friendly", "threat_level": 2},

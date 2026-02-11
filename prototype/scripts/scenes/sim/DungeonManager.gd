@@ -69,18 +69,14 @@ func generate_resources():
 func process_payroll():
 	var workers = get_tree().get_nodes_in_group("workers").size()
 	var liches = get_tree().get_nodes_in_group("liches").size()
-	var gold_cost = (workers * 10) + (liches * 50)
-	var food_cost = (workers * 5) # Liches don't eat
-	
+	var lizardmen = get_tree().get_nodes_in_group("lizardmen").size()
+	var gold_cost = (workers * 10) + (liches * 50) + (lizardmen * 20)
+	var food_cost = (workers * 5) + (lizardmen * 15)
 	var has_gold = GameManager.spend_resource("gold", gold_cost)
 	var has_food = GameManager.spend_resource("food", food_cost)
-	
-	if has_gold and has_food:
-		minions_happy = true
-		print("Payroll and Rations processed. Minions are satisfied.")
-	else:
-		minions_happy = false
-		print("Nazarick is lacking resources! Minions are unhappy!")
+	minions_happy = has_gold and has_food
+	if minions_happy: print("Payroll processed.")
+	else: print("Nazarick is broke!")
 
 func spawn_enemy_digger():
 	var scene = load("res://scenes/sim/entities/EnemyDigger.tscn")
@@ -115,7 +111,8 @@ func trigger_rebake():
 	bake_timer = 0.0
 
 func mark_for_digging(grid_pos: Vector2i):
-	if dungeon_grid.get(grid_pos) == TileType.WALL or dungeon_grid.get(grid_pos) == TileType.REINFORCED_WALL:
+	var type = dungeon_grid.get(grid_pos)
+	if type == TileType.WALL or type == TileType.REINFORCED_WALL:
 		set_digging_mark(grid_pos, !digging_queue.has(grid_pos))
 
 func set_digging_mark(grid_pos: Vector2i, state: bool):
@@ -164,27 +161,22 @@ func claim_tile(grid_pos: Vector2i):
 func slap_at(grid_pos: Vector2i):
 	for child in get_children():
 		if child.has_method("get_grid_pos") and child.get_grid_pos() == grid_pos:
-			if child.has_method("be_slapped"):
-				child.be_slapped()
+			if child.has_method("be_slapped"): child.be_slapped()
 
 func build_room(grid_pos: Vector2i, type: TileType):
 	if dungeon_grid.get(grid_pos) == TileType.CLAIMED:
 		dungeon_grid[grid_pos] = type
-		if type == TileType.REINFORCED_WALL:
-			wall_health[grid_pos] = REINFORCED_HEALTH
+		if type == TileType.REINFORCED_WALL: wall_health[grid_pos] = REINFORCED_HEALTH
 		update_room_counts()
 		refresh_visuals()
 		trigger_rebake()
 
-func build_reinforced_wall(grid_pos: Vector2i):
-	build_room(grid_pos, TileType.REINFORCED_WALL)
+func build_reinforced_wall(grid_pos: Vector2i): build_room(grid_pos, TileType.REINFORCED_WALL)
 
 func update_room_counts():
-	for key in room_counts.keys():
-		room_counts[key] = 0
+	for key in room_counts.keys(): room_counts[key] = 0
 	for type in dungeon_grid.values():
-		if room_counts.has(type):
-			room_counts[type] += 1
+		if room_counts.has(type): room_counts[type] += 1
 	stats_updated.emit(room_counts)
 	check_attraction()
 
@@ -192,14 +184,12 @@ func check_attraction():
 	var total_built = 0
 	for type in dungeon_grid.values():
 		if type != TileType.WALL and type != TileType.REINFORCED_WALL: total_built += 1
-	var target_imps = 2 + (total_built / 15)
-	var current_imps = get_tree().get_nodes_in_group("workers").size()
-	if current_imps < target_imps:
+	if get_tree().get_nodes_in_group("workers").size() < 2 + (total_built / 15):
 		spawn_minion("res://scenes/sim/entities/Imp.tscn", "workers")
-	var target_liches = room_counts[TileType.LIBRARY] / 20
-	var current_liches = get_tree().get_nodes_in_group("liches").size()
-	if current_liches < target_liches:
+	if get_tree().get_nodes_in_group("liches").size() < room_counts[TileType.LIBRARY] / 20:
 		spawn_minion("res://scenes/sim/entities/ElderLich.tscn", "liches")
+	if get_tree().get_nodes_in_group("lizardmen").size() < room_counts[TileType.HATCHERY] / 15:
+		spawn_minion("res://scenes/sim/entities/Lizardman.tscn", "lizardmen")
 
 func spawn_minion(scene_path: String, group_name: String):
 	var scene = load(scene_path)
@@ -211,8 +201,7 @@ func spawn_minion(scene_path: String, group_name: String):
 
 func refresh_visuals():
 	for child in get_children():
-		if child is MeshInstance3D or child is StaticBody3D:
-			child.queue_free()
+		if child is MeshInstance3D or child is StaticBody3D: child.queue_free()
 	var base_floor = MeshInstance3D.new()
 	var plane = PlaneMesh.new()
 	plane.size = Vector2(grid_width * tile_size, grid_depth * tile_size)
@@ -258,7 +247,7 @@ func refresh_visuals():
 					TileType.TREASURY: mat.albedo_color = Color(0.8, 0.7, 0.0)
 					TileType.LIBRARY: mat.albedo_color = Color(0.0, 0.4, 0.8)
 					TileType.BARRACKS: mat.albedo_color = Color(0.1, 0.5, 0.1)
-					TileType.HATCHERY: mat.albedo_color = Color(0.6, 0.3, 0.0) # Brown/Meat
+					TileType.HATCHERY: mat.albedo_color = Color(0.6, 0.3, 0.0)
 				mesh.material_override = mat
 				add_child(mesh)
 				mesh.position = Vector3(pos.x * tile_size, box.size.y / 2.0, pos.y * tile_size)

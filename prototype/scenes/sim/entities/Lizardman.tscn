@@ -1,0 +1,29 @@
+[gd_scene load_steps=6 format=3 uid="uid://c1z2x3y4w5v6"]
+
+[ext_resource type="Script" path="res://scripts/scenes/sim/Lizardman.gd" id="1_l3m2r"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_Lizard"]
+radius = 0.4
+height = 1.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Lizard"]
+albedo_color = Color(0.2, 0.6, 0.2, 1)
+roughness = 0.8
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_Lizard"]
+radius = 0.4
+height = 1.6
+
+[node name="Lizardman" type="CharacterBody3D"]
+script = ExtResource("1_l3m2r")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("CapsuleMesh_Lizard")
+material_override = SubResource("StandardMaterial3D_Lizard")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_Lizard")
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+path_desired_distance = 0.5
+target_desired_distance = 0.5

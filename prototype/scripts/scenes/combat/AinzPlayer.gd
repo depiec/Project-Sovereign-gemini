@@ -3,7 +3,9 @@ extends CharacterBody3D
 # AinzPlayer.gd - Player Logic (Combat Layer)
 # Handles movement and spell casting.
 
-const SPEED = 5.0
+const OVERLORD_SPEED = 5.0
+const MOMON_SPEED = 8.0
+var SPEED = OVERLORD_SPEED
 const JUMP_VELOCITY = 4.5
 
 # Get the gravity from the project settings to be synced with RigidBody nodes.
@@ -30,6 +32,7 @@ func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	add_to_group("player")
 	update_hud()
+	apply_persona_visuals()
 
 func _physics_process(delta):
 	if is_casting:
@@ -43,6 +46,10 @@ func _physics_process(delta):
 	# Handle Jump.
 	if Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = JUMP_VELOCITY
+	
+	# Persona Swap
+	if Input.is_action_just_pressed("swap_persona"):
+		toggle_persona()
 
 	# Get the input direction and handle the movement/deceleration.
 	var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
@@ -66,6 +73,33 @@ func _physics_process(delta):
 
 	move_and_slide()
 
+func toggle_persona():
+	if GameManager.player_state.current_persona == GameManager.Persona.OVERLORD:
+		GameManager.player_state.current_persona = GameManager.Persona.MOMON
+		SPEED = MOMON_SPEED
+		print("Swapped to MOMON")
+	else:
+		GameManager.player_state.current_persona = GameManager.Persona.OVERLORD
+		SPEED = OVERLORD_SPEED
+		print("Swapped to OVERLORD")
+	
+	apply_persona_visuals()
+
+func apply_persona_visuals():
+	var mat = visuals.get_surface_override_material(0)
+	if not mat:
+		mat = StandardMaterial3D.new()
+		visuals.set_surface_override_material(0, mat)
+		
+	if GameManager.player_state.current_persona == GameManager.Persona.OVERLORD:
+		mat.albedo_color = Color(0.12, 0, 0.23) # Dark Purple
+		mat.emission = Color(0.18, 0, 0.36)
+	else:
+		mat.albedo_color = Color(0.05, 0.05, 0.05) # Black Plate Armor
+		mat.emission = Color(0.2, 0.2, 0.2)
+	
+	mat.emission_enabled = true
+
 func handle_casting(delta):
 	cast_timer -= delta
 	# Update HUD with casting progress
@@ -87,11 +121,21 @@ func _unhandled_input(event):
 		if Input.get_mouse_mode() == Input.MOUSE_MODE_VISIBLE:
 			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 			return
+		
+		# Only allow magic in Overlord mode (for now)
+		if GameManager.player_state.current_persona == GameManager.Persona.OVERLORD:
+			if event.button_index == MOUSE_BUTTON_LEFT and GameManager.player_state.known_spells.size() > 0:
+				start_cast(GameManager.player_state.known_spells[0])
+			elif event.button_index == MOUSE_BUTTON_RIGHT and GameManager.player_state.known_spells.size() > 1:
+				start_cast(GameManager.player_state.known_spells[1])
+		else:
+			if event.button_index == MOUSE_BUTTON_LEFT:
+				perform_melee_attack()
 
-		if event.button_index == MOUSE_BUTTON_LEFT and GameManager.player_state.known_spells.size() > 0:
-			start_cast(GameManager.player_state.known_spells[0])
-		elif event.button_index == MOUSE_BUTTON_RIGHT and GameManager.player_state.known_spells.size() > 1:
-			start_cast(GameManager.player_state.known_spells[1])
+func perform_melee_attack():
+	print("Momon: Twin Blade Strike!")
+	# Placeholder for melee logic
+	# In a real game, this would spawn an Area3D hit-box or raycast
 
 func start_cast(spell: SpellResource):
 	if current_mp >= spell.mana_cost:

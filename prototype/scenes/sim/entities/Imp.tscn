@@ -1,0 +1,28 @@
+[gd_scene load_steps=6 format=3 uid="uid://c1v2u3n4m5l6"]
+
+[ext_resource type="Script" path="res://scripts/scenes/sim/UndeadWorker.gd" id="1_w8k9r"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_Imp"]
+radius = 0.3
+height = 1.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Imp"]
+albedo_color = Color(0.1, 0.4, 0.1, 1)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_Imp"]
+radius = 0.3
+height = 1.0
+
+[node name="Imp" type="CharacterBody3D"]
+script = ExtResource("1_w8k9r")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("CapsuleMesh_Imp")
+material_override = SubResource("StandardMaterial3D_Imp")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_Imp")
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+path_desired_distance = 0.5
+target_desired_distance = 0.5

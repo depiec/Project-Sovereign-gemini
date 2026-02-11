@@ -1,0 +1,30 @@
+[gd_scene load_steps=6 format=3 uid="uid://c1l2m3l4k5j6"]
+
+[ext_resource type="Script" path="res://scripts/scenes/sim/ElderLich.gd" id="1_x8y9z"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_Lich"]
+radius = 0.25
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Lich"]
+albedo_color = Color(0.1, 0.2, 0.8, 1)
+emission_enabled = true
+emission = Color(0, 0.4, 1, 1)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_Lich"]
+radius = 0.25
+height = 1.8
+
+[node name="ElderLich" type="CharacterBody3D"]
+script = ExtResource("1_x8y9z")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("CapsuleMesh_Lich")
+material_override = SubResource("StandardMaterial3D_Lich")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_Lich")
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+path_desired_distance = 0.5
+target_desired_distance = 0.5

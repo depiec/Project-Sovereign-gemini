@@ -26,3 +26,7 @@ shape = SubResource("CapsuleShape3D_Imp")
 [node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
 path_desired_distance = 0.5
 target_desired_distance = 0.5
+
+[node name="PossessionCamera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.939693, 0.34202, 0, -0.34202, 0.939693, 0, 2, 4)
+current = false

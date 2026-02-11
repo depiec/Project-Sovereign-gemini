@@ -2,6 +2,7 @@ extends CharacterBody3D
 
 # UndeadWorker.gd - The "Imp" of Nazarick
 # Automatically finds tasks in the DungeonManager queue.
+# Can be possessed by the player.
 
 @export var speed = 4.0
 @export var work_damage = 25.0 # Damage per second
@@ -14,21 +15,23 @@ var task_timer = 0.0
 var boost_timer = 0.0
 var stuck_timer = 0.0
 var retarget_cooldown = 0.0
+var is_possessed = false
 
 func _ready():
-	# Allow navigation to start after the first frame
 	set_physics_process(false)
 	call_deferred("setup_nav")
 
 func setup_nav():
-	# Wait for first bake
 	await get_tree().physics_frame
 	set_physics_process(true)
 
 func _physics_process(delta):
+	if is_possessed:
+		handle_possessed_movement(delta)
+		return
+
 	if boost_timer > 0:
 		boost_timer -= delta
-	
 	if retarget_cooldown > 0:
 		retarget_cooldown -= delta
 	
@@ -42,20 +45,41 @@ func _physics_process(delta):
 	if current_target_grid != Vector2i(-1, -1):
 		move_to_target(delta)
 
+func handle_possessed_movement(delta):
+	var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	var dir = Vector3(input_dir.x, 0, input_dir.y).normalized()
+	
+	velocity = dir * speed * 1.5
+	if not is_on_floor():
+		velocity.y -= 9.8 * delta
+	
+	move_and_slide()
+	
+	if dir.length() > 0.1:
+		look_at(global_transform.origin + dir, Vector3.UP)
+
+func be_possessed():
+	is_possessed = true
+	is_busy = false
+	current_target_grid = Vector2i(-1, -1)
+	if has_node("PossessionCamera"):
+		get_node("PossessionCamera").current = true
+
+func be_unpossessed():
+	is_possessed = false
+	if has_node("PossessionCamera"):
+		get_node("PossessionCamera").current = false
+
 func find_work():
-	# If already working on a wall, just keep going
 	var current_type = dungeon_manager.dungeon_grid.get(current_target_grid)
 	if is_busy and current_type == dungeon_manager.TileType.WALL:
 		return
 	elif is_busy and current_type != dungeon_manager.TileType.WALL:
-		# If it's no longer a wall but we are busy with a wall task, abort
 		is_busy = false
 		current_target_grid = Vector2i(-1, -1)
 
-	# 1. Check for digging (Find closest exposed wall)
 	var closest_dist = 9999.0
 	var best_target = Vector2i(-1, -1)
-	
 	for i in range(dungeon_manager.digging_queue.size()):
 		var target = dungeon_manager.digging_queue[i]
 		if dungeon_manager.is_adjacent_to_open_space(target):
@@ -68,7 +92,6 @@ func find_work():
 		current_target_grid = best_target
 		return
 	
-	# 2. Check for claiming (Find closest empty tile)
 	closest_dist = 9999.0
 	best_target = Vector2i(-1, -1)
 	for pos in dungeon_manager.dungeon_grid.keys():
@@ -86,8 +109,6 @@ func find_work():
 
 func move_to_target(delta):
 	var target_world_pos = Vector3(current_target_grid.x * 2.0, 1.0, current_target_grid.y * 2.0)
-	
-	# Update Navigation Agent
 	nav_agent.target_position = target_world_pos
 	
 	if nav_agent.is_navigation_finished():
@@ -99,11 +120,9 @@ func move_to_target(delta):
 	dir.y = 0
 	
 	var current_speed = speed * 2.0 if boost_timer > 0 else speed
-	
 	var type = dungeon_manager.dungeon_grid.get(current_target_grid)
 	var dist = global_transform.origin.distance_to(target_world_pos)
 	
-	# Logic for 'Direct Contact' (Obstacles block nav agent from finishing)
 	if type == dungeon_manager.TileType.WALL:
 		if dist < 1.6 or is_on_wall():
 			start_task()
@@ -126,47 +145,37 @@ func check_stuck(delta):
 		stuck_timer = 0.0
 	
 	if stuck_timer > 1.5:
-		# Try a small nudge to get around corners
 		global_transform.origin += Vector3(randf_range(-0.5, 0.5), 0, randf_range(-0.5, 0.5))
-		
 		if stuck_timer > 3.0:
-			print(name, " is stuck. Resetting task.")
 			current_target_grid = Vector2i(-1, -1)
 			stuck_timer = 0.0
-			retarget_cooldown = 1.0 # Wait a second before trying again
+			retarget_cooldown = 1.0
 
 func start_task():
 	is_busy = true
-	velocity = Vector3.ZERO # Stop movement immediately
-	task_timer = 2.0 # 2 seconds for non-wall tasks
-	if boost_timer > 0: task_timer /= 2.0 # Slapped imps work faster
+	velocity = Vector3.ZERO
+	task_timer = 2.0
+	if boost_timer > 0: task_timer /= 2.0
 
 func handle_task(delta):
 	var type = dungeon_manager.dungeon_grid.get(current_target_grid)
-	
-	if type == dungeon_manager.TileType.WALL:
-		# Deal damage over time
+	if type == dungeon_manager.TileType.WALL or type == dungeon_manager.TileType.REINFORCED_WALL:
 		var damage_this_frame = work_damage * delta
 		if boost_timer > 0: damage_this_frame *= 2.0
-		
 		dungeon_manager.damage_wall(current_target_grid, damage_this_frame)
-		
-		# Task is 'done' when the wall is gone (DungeonManager will update grid)
-		if dungeon_manager.dungeon_grid.get(current_target_grid) != dungeon_manager.TileType.WALL:
+		if dungeon_manager.dungeon_grid.get(current_target_grid) == dungeon_manager.TileType.EMPTY:
 			is_busy = false
 			current_target_grid = Vector2i(-1, -1)
 	else:
-		# Use timer for claiming/building
 		task_timer -= delta
 		if task_timer <= 0:
 			is_busy = false
 			if type == dungeon_manager.TileType.EMPTY:
 				dungeon_manager.claim_tile(current_target_grid)
-			
 			current_target_grid = Vector2i(-1, -1)
 
 func be_slapped():
-	boost_timer = 10.0 # 10 seconds of fast movement and work
+	boost_timer = 10.0
 	print(name, " was slapped by Ainz-sama! Working harder!")
 
 func get_grid_pos() -> Vector2i:

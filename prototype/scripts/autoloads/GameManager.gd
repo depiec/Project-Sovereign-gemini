@@ -29,7 +29,8 @@ var nazarick_state = {
 	"resources": {
 		"gold": 1000000, # YGGDRASIL Gold
 		"souls": 0,
-		"materials": 500
+		"materials": 500,
+		"food": 100
 	},
 	"floors": {
 		"floor_1": {"defense": 100, "traps": []},

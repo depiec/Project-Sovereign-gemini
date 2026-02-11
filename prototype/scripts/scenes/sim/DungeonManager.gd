@@ -3,20 +3,18 @@ extends Node3D
 # DungeonManager.gd - Handles DK-style grid management
 # Tiles are 2x2 units.
 
-enum TileType { WALL, EMPTY, CLAIMED, TREASURY, LIBRARY, BARRACKS, REINFORCED_WALL }
+enum TileType { WALL, EMPTY, CLAIMED, TREASURY, LIBRARY, BARRACKS, REINFORCED_WALL, HATCHERY }
 
 var grid_width = 20
 var grid_depth = 20
 var tile_size = 2.0
 
-# Dictionary keyed by Vector2i(x, z) storing TileType
 var dungeon_grid = {}
-var wall_health = {} # Stores HP for WALL tiles
+var wall_health = {}
 
 const MAX_WALL_HEALTH = 100.0
 const REINFORCED_HEALTH = 500.0
 
-# Marked for digging
 var digging_queue = []
 
 signal grid_updated
@@ -26,7 +24,8 @@ var room_counts = {
 	TileType.TREASURY: 0,
 	TileType.LIBRARY: 0,
 	TileType.BARRACKS: 0,
-	TileType.REINFORCED_WALL: 0
+	TileType.REINFORCED_WALL: 0,
+	TileType.HATCHERY: 0
 }
 
 var resource_timer: float = 0.0
@@ -44,20 +43,17 @@ func _process(delta):
 	if resource_timer >= 5.0:
 		generate_resources()
 		resource_timer = 0.0
-	
 	payment_timer += delta
 	if payment_timer >= 30.0:
 		process_payroll()
 		payment_timer = 0.0
-		
 	raid_timer += delta
 	if raid_timer >= 60.0:
 		spawn_enemy_digger()
 		raid_timer = 0.0
-	
 	if needs_bake:
 		bake_timer += delta
-		if bake_timer >= 0.2: # Wait for batch changes
+		if bake_timer >= 0.2:
 			nav_region.bake_navigation_mesh()
 			needs_bake = false
 			bake_timer = 0.0
@@ -65,27 +61,32 @@ func _process(delta):
 func generate_resources():
 	if room_counts[TileType.TREASURY] > 0:
 		GameManager.add_resource("gold", room_counts[TileType.TREASURY] * 10)
-	
 	if room_counts[TileType.LIBRARY] > 0:
 		GameManager.player_state.mp = min(GameManager.player_state.mp + room_counts[TileType.LIBRARY], 1000)
+	if room_counts[TileType.HATCHERY] > 0:
+		GameManager.add_resource("food", room_counts[TileType.HATCHERY] * 5)
 
 func process_payroll():
 	var workers = get_tree().get_nodes_in_group("workers").size()
 	var liches = get_tree().get_nodes_in_group("liches").size()
-	var total_cost = (workers * 10) + (liches * 50)
-	if GameManager.spend_resource("gold", total_cost):
+	var gold_cost = (workers * 10) + (liches * 50)
+	var food_cost = (workers * 5) # Liches don't eat
+	
+	var has_gold = GameManager.spend_resource("gold", gold_cost)
+	var has_food = GameManager.spend_resource("food", food_cost)
+	
+	if has_gold and has_food:
 		minions_happy = true
-		print("Payroll processed. Minions are satisfied.")
+		print("Payroll and Rations processed. Minions are satisfied.")
 	else:
 		minions_happy = false
-		print("Nazarick is broke! Minions are unhappy!")
+		print("Nazarick is lacking resources! Minions are unhappy!")
 
 func spawn_enemy_digger():
 	var scene = load("res://scenes/sim/entities/EnemyDigger.tscn")
 	if not scene: return
 	var digger = scene.instantiate()
 	add_child(digger)
-	# Spawn at edge
 	var side = randi() % 4
 	var spawn_pos = Vector3.ZERO
 	match side:
@@ -94,7 +95,6 @@ func spawn_enemy_digger():
 		2: spawn_pos = Vector3(randf_range(0, grid_width * tile_size), 1.0, 0)
 		3: spawn_pos = Vector3(randf_range(0, grid_width * tile_size), 1.0, grid_depth * tile_size)
 	digger.global_transform.origin = spawn_pos
-	print("An enemy is tunneling into Nazarick from the outside!")
 
 func _ready():
 	setup_initial_grid()
@@ -251,13 +251,14 @@ func refresh_visuals():
 				static_body.add_child(mesh)
 				add_child(static_body)
 				static_body.position = Vector3(pos.x * tile_size, 1.0, pos.y * tile_size)
-			TileType.EMPTY, TileType.CLAIMED, TileType.TREASURY, TileType.LIBRARY, TileType.BARRACKS:
+			TileType.EMPTY, TileType.CLAIMED, TileType.TREASURY, TileType.LIBRARY, TileType.BARRACKS, TileType.HATCHERY:
 				match type:
 					TileType.EMPTY: mat.albedo_color = Color(0.1, 0.1, 0.1)
 					TileType.CLAIMED: mat.albedo_color = Color(0.3, 0.0, 0.5)
 					TileType.TREASURY: mat.albedo_color = Color(0.8, 0.7, 0.0)
 					TileType.LIBRARY: mat.albedo_color = Color(0.0, 0.4, 0.8)
 					TileType.BARRACKS: mat.albedo_color = Color(0.1, 0.5, 0.1)
+					TileType.HATCHERY: mat.albedo_color = Color(0.6, 0.3, 0.0) # Brown/Meat
 				mesh.material_override = mat
 				add_child(mesh)
 				mesh.position = Vector3(pos.x * tile_size, box.size.y / 2.0, pos.y * tile_size)

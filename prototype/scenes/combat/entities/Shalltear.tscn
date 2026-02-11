@@ -31,5 +31,15 @@ material_override = SubResource("StandardMaterial3D_Shalltear")
 shape = SubResource("CapsuleShape3D_Shalltear")
 
 [node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+
 path_desired_distance = 0.5
+
 target_desired_distance = 0.5
+
+
+
+[node name="PossessionCamera" type="Camera3D" parent="."]
+
+transform = Transform3D(1, 0, 0, 0, 0.939693, 0.34202, 0, -0.34202, 0.939693, 0, 2.5, 4.5)
+
+current = false

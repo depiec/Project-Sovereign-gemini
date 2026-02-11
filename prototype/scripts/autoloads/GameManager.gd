@@ -95,7 +95,11 @@ func start_combat(enemy_data: Dictionary):
 	print("Combat Started against: ", enemy_data)
 	get_tree().change_scene_to_file("res://scenes/combat/CombatLayer.tscn")
 
+var current_turn = 1
+var world_level = 1
+
 func end_turn():
 	world_state.current_turn += 1
+	world_level = 1 + (world_state.current_turn / 5) # Every 5 turns world level increases
 	turn_ended.emit(world_state.current_turn)
-	print("Turn Ended. Current Turn: ", world_state.current_turn)
+	print("Turn Ended. World Level: ", world_level)

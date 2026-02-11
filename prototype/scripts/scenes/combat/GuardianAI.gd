@@ -109,13 +109,14 @@ func perform_attack():
 	if not has_node("AttackTimer"):
 		var timer = Timer.new()
 		timer.name = "AttackTimer"
-		timer.wait_time = 1.0
+		timer.wait_time = 1.0 / speed_mult
 		timer.one_shot = true
 		add_child(timer)
 		timer.start()
 		if target_enemy.has_method("take_damage"): target_enemy.take_damage(int(attack_damage * damage_mult), self)
 	
 	if get_node("AttackTimer").is_stopped():
+		get_node("AttackTimer").wait_time = 1.0 / speed_mult
 		get_node("AttackTimer").start()
 		if target_enemy.has_method("take_damage"): target_enemy.take_damage(int(attack_damage * damage_mult), self)
 

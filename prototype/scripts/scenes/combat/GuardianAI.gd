@@ -1,7 +1,7 @@
 extends CharacterBody3D
 
 # GuardianAI.gd - Combat AI for Floor Guardians (Albedo, Shalltear)
-# Can use specific GuardianAbility resources.
+# Can be possessed for direct player control.
 
 @export var speed = 7.0
 @export var attack_damage = 40
@@ -13,25 +13,47 @@ extends CharacterBody3D
 var player: Node3D
 var target_enemy: CharacterBody3D
 var ability_timer = 0.0
+var is_possessed = false
 
 func _ready():
 	add_to_group("allies")
+	add_to_group("guardians")
 	player = get_tree().get_first_node_in_group("player")
 
 func _physics_process(delta):
-	if ability_timer > 0:
-		ability_timer -= delta
+	if is_possessed:
+		handle_possessed_movement(delta)
+		return
 
+	if ability_timer > 0: ability_timer -= delta
 	if not player:
 		player = get_tree().get_first_node_in_group("player")
 		return
 
 	find_target()
-	
-	if target_enemy:
-		combat_behavior(delta)
-	else:
-		follow_behavior(delta)
+	if target_enemy: combat_behavior(delta)
+	else: follow_behavior(delta)
+
+func handle_possessed_movement(delta):
+	var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	var dir = Vector3(input_dir.x, 0, input_dir.y).normalized()
+	velocity = dir * speed * 1.5
+	if not is_on_floor(): velocity.y -= 9.8 * delta
+	move_and_slide()
+	if dir.length() > 0.1: look_at(global_transform.origin + dir, Vector3.UP)
+	if Input.is_action_just_pressed("mouse_left"): perform_attack()
+
+func be_possessed():
+	is_possessed = true
+	velocity = Vector3.ZERO
+	if has_node("PossessionCamera"):
+		get_node("PossessionCamera").current = true
+	print(name, " is now under direct control.")
+
+func be_unpossessed():
+	is_possessed = false
+	if has_node("PossessionCamera"):
+		get_node("PossessionCamera").current = false
 
 func find_target():
 	var enemies = get_tree().get_nodes_in_group("enemies")
@@ -46,13 +68,10 @@ func find_target():
 
 func combat_behavior(delta):
 	var dist = global_transform.origin.distance_to(target_enemy.global_transform.origin)
-	
-	# Try ability first
 	if special_ability and ability_timer <= 0:
 		if dist <= special_ability.range:
 			use_ability()
 			return
-
 	if dist <= attack_range:
 		velocity = Vector3.ZERO
 		perform_attack()
@@ -65,8 +84,7 @@ func use_ability():
 
 func follow_behavior(_delta):
 	var dist = global_transform.origin.distance_to(player.global_transform.origin)
-	if dist > follow_distance:
-		move_to(player.global_transform.origin)
+	if dist > follow_distance: move_to(player.global_transform.origin)
 	else:
 		velocity = Vector3.ZERO
 		move_and_slide()
@@ -79,8 +97,7 @@ func move_to(target_pos):
 	dir.y = 0
 	velocity = dir * speed
 	move_and_slide()
-	if dir.length() > 0.1:
-		look_at(global_transform.origin + dir, Vector3.UP)
+	if dir.length() > 0.1: look_at(global_transform.origin + dir, Vector3.UP)
 
 func perform_attack():
 	if not has_node("AttackTimer"):
@@ -90,13 +107,10 @@ func perform_attack():
 		timer.one_shot = true
 		add_child(timer)
 		timer.start()
-		if target_enemy.has_method("take_damage"):
-			target_enemy.take_damage(attack_damage)
+		if target_enemy.has_method("take_damage"): target_enemy.take_damage(attack_damage)
 	
 	if get_node("AttackTimer").is_stopped():
 		get_node("AttackTimer").start()
-		if target_enemy.has_method("take_damage"):
-			target_enemy.take_damage(attack_damage)
+		if target_enemy.has_method("take_damage"): target_enemy.take_damage(attack_damage)
 
-func take_damage(amount: int):
-	print(name, " took ", amount, " damage.")
+func take_damage(amount: int): print(name, " took ", amount, " damage.")

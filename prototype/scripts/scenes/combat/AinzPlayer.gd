@@ -1,7 +1,7 @@
 extends CharacterBody3D
 
 # AinzPlayer.gd - Player Logic (Combat Layer)
-# Handles movement, spell casting, and persona swapping.
+# Handles movement, spell casting, persona swapping, and ally control.
 
 const OVERLORD_SPEED = 5.0
 const MOMON_SPEED = 8.0
@@ -11,6 +11,7 @@ const JUMP_VELOCITY = 4.5
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 var current_mp: int = 100
 var current_hp: int = 100
+var is_possessed = true
 
 @onready var spring_arm: SpringArm3D = $SpringArm3D
 @onready var visuals: MeshInstance3D = $MeshInstance3D
@@ -32,6 +33,8 @@ func _ready():
 	apply_persona_visuals()
 
 func _physics_process(delta):
+	if not is_possessed: return
+	
 	if is_casting:
 		handle_casting(delta)
 		return
@@ -41,6 +44,9 @@ func _physics_process(delta):
 		velocity.y = JUMP_VELOCITY
 	if Input.is_action_just_pressed("swap_persona"):
 		toggle_persona()
+	if Input.is_action_just_pressed("swap_control"):
+		try_swap_control()
+		
 	var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	if input_dir:
 		var camera_rot_y = spring_arm.global_transform.basis.get_euler().y
@@ -53,6 +59,24 @@ func _physics_process(delta):
 		velocity.x = move_toward(velocity.x, 0, SPEED)
 		velocity.z = move_toward(velocity.z, 0, SPEED)
 	move_and_slide()
+
+func try_swap_control():
+	var guardians = get_tree().get_nodes_in_group("guardians")
+	if guardians.size() > 0:
+		var g = guardians[0]
+		be_unpossessed()
+		g.be_possessed()
+
+func be_possessed():
+	is_possessed = true
+	camera.current = true
+	print("Ainz: Regained control.")
+
+func be_unpossessed():
+	is_possessed = false
+	velocity = Vector3.ZERO
+	camera.current = false
+	print("Ainz: Delegating control.")
 
 func toggle_persona():
 	if GameManager.player_state.current_persona == GameManager.Persona.OVERLORD:
@@ -83,6 +107,16 @@ func handle_casting(delta):
 		complete_cast()
 
 func _unhandled_input(event):
+	if not is_possessed:
+		if event.is_action_pressed("swap_control"):
+			var guardians = get_tree().get_nodes_in_group("guardians")
+			for g in guardians:
+				if g.is_possessed:
+					g.be_unpossessed()
+					be_possessed()
+					return
+		return
+
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 		spring_arm.rotation.y -= event.relative.x * 0.005
 		spring_arm.rotation.x -= event.relative.y * 0.005

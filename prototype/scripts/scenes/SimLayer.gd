@@ -1,32 +1,30 @@
 extends Node3D
 
-# SimLayer.gd - Updated for Mouse-Drag Interaction
+# SimLayer.gd - Updated for Mouse-Drag Interaction and Reinforced Walls
 
-@onready var dungeon_manager = $DungeonManager
+@onready var dungeon_manager = $NavigationRegion3D/DungeonManager
 @onready var camera = $Camera3D
+@onready var minion_label: Label = %MinionCountLabel
 
-enum InteractionMode { DIG, CLAIM, BUILD_TREASURY, BUILD_LIBRARY, SLAP }
+enum InteractionMode { DIG, CLAIM, BUILD_TREASURY, BUILD_LIBRARY, SLAP, BUILD_REINFORCED }
 var current_mode = InteractionMode.DIG
 
 var is_dragging = false
 var drag_mode_is_adding = true # True to mark, False to unmark
 var last_grid_pos = Vector2i(-1, -1)
 
-@onready var minion_label: Label = %MinionCountLabel
-
 func _ready():
 	print("SimLayer: Dungeon Keeper mode active.")
 	dungeon_manager.stats_updated.connect(_on_dungeon_stats_updated)
 
 func _process(_delta):
-	# Periodically update minion counts (fallback if signal is missed)
+	# Periodically update minion counts
 	var workers = get_tree().get_nodes_in_group("workers").size()
 	var liches = get_tree().get_nodes_in_group("liches").size()
 	minion_label.text = "Workers: %d | Liches: %d" % [workers, liches]
 
 func _on_dungeon_stats_updated(stats: Dictionary):
 	print("Dungeon Stats: ", stats)
-	# Could update other UI elements here (Treasury size, etc.)
 
 func _input(event):
 	if event is InputEventMouseButton:
@@ -34,7 +32,6 @@ func _input(event):
 			is_dragging = event.pressed
 			if is_dragging:
 				var pos = get_grid_pos(event.position)
-				# Determine if we are painting or erasing based on first tile
 				if current_mode == InteractionMode.DIG:
 					drag_mode_is_adding = !dungeon_manager.digging_queue.has(pos)
 				else:
@@ -76,6 +73,8 @@ func handle_interaction(grid_pos: Vector2i, is_right_click: bool):
 			dungeon_manager.build_room(grid_pos, dungeon_manager.TileType.TREASURY)
 		InteractionMode.BUILD_LIBRARY:
 			dungeon_manager.build_room(grid_pos, dungeon_manager.TileType.LIBRARY)
+		InteractionMode.BUILD_REINFORCED:
+			dungeon_manager.build_reinforced_wall(grid_pos)
 
 func _on_DigModeButton_pressed():
 	current_mode = InteractionMode.DIG
@@ -84,6 +83,10 @@ func _on_DigModeButton_pressed():
 func _on_SlapButton_pressed():
 	current_mode = InteractionMode.SLAP
 	print("Mode: Slap")
+
+func _on_ReinforcedButton_pressed():
+	current_mode = InteractionMode.BUILD_REINFORCED
+	print("Mode: Build Reinforced")
 
 func _on_TreasuryButton_pressed():
 	current_mode = InteractionMode.BUILD_TREASURY

@@ -6,6 +6,7 @@ extends Node
 signal sasuga_changed(new_value)
 signal resources_updated(new_resources)
 signal raid_started(raid_data)
+signal turn_ended(turn_number)
 
 # --- Game State ---
 
@@ -93,3 +94,8 @@ func trigger_raid(raid_data: Dictionary):
 func start_combat(enemy_data: Dictionary):
 	print("Combat Started against: ", enemy_data)
 	get_tree().change_scene_to_file("res://scenes/combat/CombatLayer.tscn")
+
+func end_turn():
+	world_state.current_turn += 1
+	turn_ended.emit(world_state.current_turn)
+	print("Turn Ended. Current Turn: ", world_state.current_turn)

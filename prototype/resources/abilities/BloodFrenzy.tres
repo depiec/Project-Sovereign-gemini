@@ -10,4 +10,7 @@ cooldown = 15.0
 range = 5.0
 damage = 0
 is_buff = true
+buff_damage_mult = 2.0
+buff_speed_mult = 1.5
+buff_duration = 8.0
 visual_scene = ExtResource("2_p7o8q")

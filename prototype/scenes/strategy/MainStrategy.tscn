@@ -34,6 +34,50 @@ text = "Select Guardian"
 layout_mode = 2
 text = "Start Raid (Simulation)"
 
+[node name="EndTurnButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "End Turn"
+
+[node name="TurnSummaryPanel" type="Panel" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -100.0
+offset_right = 200.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TurnSummaryPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="TurnSummaryPanel/VBoxContainer"]
+layout_mode = 2
+text = "TURN SUMMARY"
+horizontal_alignment = 1
+
+[node name="SummaryLabel" type="Label" parent="TurnSummaryPanel/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Resources Collected: ...
+Threat Level: ..."
+horizontal_alignment = 1
+
+[node name="CloseSummaryButton" type="Button" parent="TurnSummaryPanel/VBoxContainer"]
+layout_mode = 2
+text = "Continue"
+
 [node name="WorldMap" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 15
@@ -185,6 +229,8 @@ text = "3. \"I shall leave the details to you.\" (Delegate)"
 
 [connection signal="pressed" from="VBoxContainer/GuardianButton" to="." method="_on_GuardianButton_pressed"]
 [connection signal="pressed" from="VBoxContainer/RaidButton" to="." method="_on_RaidButton_pressed"]
+[connection signal="pressed" from="VBoxContainer/EndTurnButton" to="." method="_on_EndTurnButton_pressed"]
+[connection signal="pressed" from="TurnSummaryPanel/VBoxContainer/CloseSummaryButton" to="." method="_on_CloseSummaryButton_pressed"]
 [connection signal="pressed" from="OperationsPanel/VBoxContainer/SpyButton" to="." method="_on_SpyButton_pressed"]
 [connection signal="pressed" from="OperationsPanel/VBoxContainer/WarButton" to="." method="_on_WarButton_pressed"]
 [connection signal="pressed" from="OperationsPanel/VBoxContainer/AnnexButton" to="." method="_on_AnnexButton_pressed"]

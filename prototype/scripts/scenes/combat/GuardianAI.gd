@@ -1,7 +1,7 @@
 extends CharacterBody3D
 
 # GuardianAI.gd - Combat AI for Floor Guardians (Albedo, Shalltear)
-# Can be possessed for direct player control.
+# Supports special abilities and player possession.
 
 @export var speed = 7.0
 @export var attack_damage = 40
@@ -15,6 +15,10 @@ var target_enemy: CharacterBody3D
 var ability_timer = 0.0
 var is_possessed = false
 
+# Buffs
+var damage_mult = 1.0
+var speed_mult = 1.0
+
 func _ready():
 	add_to_group("allies")
 	add_to_group("guardians")
@@ -24,12 +28,10 @@ func _physics_process(delta):
 	if is_possessed:
 		handle_possessed_movement(delta)
 		return
-
 	if ability_timer > 0: ability_timer -= delta
 	if not player:
 		player = get_tree().get_first_node_in_group("player")
 		return
-
 	find_target()
 	if target_enemy: combat_behavior(delta)
 	else: follow_behavior(delta)
@@ -37,7 +39,7 @@ func _physics_process(delta):
 func handle_possessed_movement(delta):
 	var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var dir = Vector3(input_dir.x, 0, input_dir.y).normalized()
-	velocity = dir * speed * 1.5
+	velocity = dir * speed * 1.5 * speed_mult
 	if not is_on_floor(): velocity.y -= 9.8 * delta
 	move_and_slide()
 	if dir.length() > 0.1: look_at(global_transform.origin + dir, Vector3.UP)
@@ -46,14 +48,18 @@ func handle_possessed_movement(delta):
 func be_possessed():
 	is_possessed = true
 	velocity = Vector3.ZERO
-	if has_node("PossessionCamera"):
-		get_node("PossessionCamera").current = true
-	print(name, " is now under direct control.")
+	if has_node("PossessionCamera"): get_node("PossessionCamera").current = true
 
 func be_unpossessed():
 	is_possessed = false
-	if has_node("PossessionCamera"):
-		get_node("PossessionCamera").current = false
+	if has_node("PossessionCamera"): get_node("PossessionCamera").current = false
+
+func apply_buff(d_mult, s_mult, duration):
+	damage_mult = d_mult
+	speed_mult = s_mult
+	await get_tree().create_timer(duration).timeout
+	damage_mult = 1.0
+	speed_mult = 1.0
 
 func find_target():
 	var enemies = get_tree().get_nodes_in_group("enemies")
@@ -95,7 +101,7 @@ func move_to(target_pos):
 	var next_path_pos = nav_agent.get_next_path_position()
 	var dir = (next_path_pos - global_transform.origin).normalized()
 	dir.y = 0
-	velocity = dir * speed
+	velocity = dir * speed * speed_mult
 	move_and_slide()
 	if dir.length() > 0.1: look_at(global_transform.origin + dir, Vector3.UP)
 
@@ -107,10 +113,10 @@ func perform_attack():
 		timer.one_shot = true
 		add_child(timer)
 		timer.start()
-		if target_enemy.has_method("take_damage"): target_enemy.take_damage(attack_damage)
+		if target_enemy.has_method("take_damage"): target_enemy.take_damage(int(attack_damage * damage_mult), self)
 	
 	if get_node("AttackTimer").is_stopped():
 		get_node("AttackTimer").start()
-		if target_enemy.has_method("take_damage"): target_enemy.take_damage(attack_damage)
+		if target_enemy.has_method("take_damage"): target_enemy.take_damage(int(attack_damage * damage_mult), self)
 
 func take_damage(amount: int): print(name, " took ", amount, " damage.")

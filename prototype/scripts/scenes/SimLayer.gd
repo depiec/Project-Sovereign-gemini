@@ -14,15 +14,30 @@ var drag_mode_is_adding = true # True to mark, False to unmark
 var last_grid_pos = Vector2i(-1, -1)
 var possessed_node: CharacterBody3D = null
 
+const CAMERA_SPEED = 20.0
+
 func _ready():
 	print("SimLayer: Dungeon Keeper mode active.")
 	dungeon_manager.stats_updated.connect(_on_dungeon_stats_updated)
 
-func _process(_delta):
+func _process(delta):
+	if not possessed_node:
+		handle_camera_movement(delta)
+	
 	# Periodically update minion counts
 	var workers = get_tree().get_nodes_in_group("workers").size()
 	var liches = get_tree().get_nodes_in_group("liches").size()
 	minion_label.text = "Workers: %d | Liches: %d" % [workers, liches]
+
+func handle_camera_movement(delta):
+	var input_dir = Vector3.ZERO
+	if Input.is_key_pressed(KEY_W): input_dir.z -= 1
+	if Input.is_key_pressed(KEY_S): input_dir.z += 1
+	if Input.is_key_pressed(KEY_A): input_dir.x -= 1
+	if Input.is_key_pressed(KEY_D): input_dir.x += 1
+	
+	if input_dir.length() > 0:
+		camera.global_transform.origin += input_dir.normalized() * CAMERA_SPEED * delta
 
 func _on_dungeon_stats_updated(stats: Dictionary):
 	print("Dungeon Stats: ", stats)

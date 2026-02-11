@@ -1,7 +1,7 @@
 extends Node3D
 
 # DungeonManager.gd - Handles DK-style grid management
-# Tiles are 2x2 units.
+# Centralizes all simulation systems: Building, Attraction, Resources, and Payroll.
 
 enum TileType { WALL, EMPTY, CLAIMED, TREASURY, LIBRARY, BARRACKS, REINFORCED_WALL, HATCHERY }
 
@@ -11,10 +11,8 @@ var tile_size = 2.0
 
 var dungeon_grid = {}
 var wall_health = {}
-
 const MAX_WALL_HEALTH = 100.0
 const REINFORCED_HEALTH = 500.0
-
 var digging_queue = []
 
 signal grid_updated
@@ -34,7 +32,6 @@ var raid_timer: float = 0.0
 var minions_happy: bool = true
 
 @onready var nav_region: NavigationRegion3D = get_parent()
-
 var bake_timer: float = 0.0
 var needs_bake: bool = false
 
@@ -59,12 +56,9 @@ func _process(delta):
 			bake_timer = 0.0
 
 func generate_resources():
-	if room_counts[TileType.TREASURY] > 0:
-		GameManager.add_resource("gold", room_counts[TileType.TREASURY] * 10)
-	if room_counts[TileType.LIBRARY] > 0:
-		GameManager.player_state.mp = min(GameManager.player_state.mp + room_counts[TileType.LIBRARY], 1000)
-	if room_counts[TileType.HATCHERY] > 0:
-		GameManager.add_resource("food", room_counts[TileType.HATCHERY] * 5)
+	if room_counts[TileType.TREASURY] > 0: GameManager.add_resource("gold", room_counts[TileType.TREASURY] * 10)
+	if room_counts[TileType.LIBRARY] > 0: GameManager.player_state.mp = min(GameManager.player_state.mp + room_counts[TileType.LIBRARY], 1000)
+	if room_counts[TileType.HATCHERY] > 0: GameManager.add_resource("food", room_counts[TileType.HATCHERY] * 5)
 
 func process_payroll():
 	var workers = get_tree().get_nodes_in_group("workers").size()
@@ -75,8 +69,6 @@ func process_payroll():
 	var has_gold = GameManager.spend_resource("gold", gold_cost)
 	var has_food = GameManager.spend_resource("food", food_cost)
 	minions_happy = has_gold and has_food
-	if minions_happy: print("Payroll processed.")
-	else: print("Nazarick is broke!")
 
 func spawn_enemy_digger():
 	var scene = load("res://scenes/sim/entities/EnemyDigger.tscn")
@@ -92,15 +84,13 @@ func spawn_enemy_digger():
 		3: spawn_pos = Vector3(randf_range(0, grid_width * tile_size), 1.0, grid_depth * tile_size)
 	digger.global_transform.origin = spawn_pos
 
-func _ready():
-	setup_initial_grid()
+func _ready(): setup_initial_grid()
 
 func setup_initial_grid():
 	for x in range(grid_width):
 		for z in range(grid_depth):
 			var pos = Vector2i(x, z)
-			if x > 8 and x < 12 and z > 8 and z < 12:
-				dungeon_grid[pos] = TileType.CLAIMED
+			if x > 8 and x < 12 and z > 8 and z < 12: dungeon_grid[pos] = TileType.CLAIMED
 			else:
 				dungeon_grid[pos] = TileType.WALL
 				wall_health[pos] = MAX_WALL_HEALTH
@@ -135,14 +125,12 @@ func damage_wall(grid_pos: Vector2i, amount: float):
 			p.global_transform.origin = Vector3(grid_pos.x * tile_size, 1.0, grid_pos.y * tile_size)
 			p.emitting = true
 			get_tree().create_timer(1.0).timeout.connect(p.queue_free)
-		if wall_health[grid_pos] <= 0:
-			dig_tile(grid_pos)
+		if wall_health[grid_pos] <= 0: dig_tile(grid_pos)
 
 func is_adjacent_to_open_space(grid_pos: Vector2i) -> bool:
 	var neighbors = [Vector2i(grid_pos.x + 1, grid_pos.y),Vector2i(grid_pos.x - 1, grid_pos.y),Vector2i(grid_pos.x, grid_pos.y + 1),Vector2i(grid_pos.x, grid_pos.y - 1)]
 	for n in neighbors:
-		if dungeon_grid.has(n) and dungeon_grid[n] != TileType.WALL and dungeon_grid[n] != TileType.REINFORCED_WALL:
-			return true
+		if dungeon_grid.has(n) and dungeon_grid[n] != TileType.WALL and dungeon_grid[n] != TileType.REINFORCED_WALL: return true
 	return false
 
 func dig_tile(grid_pos: Vector2i):
@@ -164,12 +152,19 @@ func slap_at(grid_pos: Vector2i):
 			if child.has_method("be_slapped"): child.be_slapped()
 
 func build_room(grid_pos: Vector2i, type: TileType):
-	if dungeon_grid.get(grid_pos) == TileType.CLAIMED:
-		dungeon_grid[grid_pos] = type
-		if type == TileType.REINFORCED_WALL: wall_health[grid_pos] = REINFORCED_HEALTH
-		update_room_counts()
-		refresh_visuals()
-		trigger_rebake()
+	var cost = 100
+	var res_type = "gold"
+	if type == TileType.REINFORCED_WALL:
+		cost = 200
+		res_type = "materials"
+	
+	if GameManager.spend_resource(res_type, cost):
+		if dungeon_grid.get(grid_pos) == TileType.CLAIMED:
+			dungeon_grid[grid_pos] = type
+			if type == TileType.REINFORCED_WALL: wall_health[grid_pos] = REINFORCED_HEALTH
+			update_room_counts()
+			refresh_visuals()
+			trigger_rebake()
 
 func build_reinforced_wall(grid_pos: Vector2i): build_room(grid_pos, TileType.REINFORCED_WALL)
 
@@ -208,8 +203,7 @@ func refresh_visuals():
 	base_floor.mesh = plane
 	base_floor.position = Vector3(grid_width * tile_size / 2.0, 0, grid_depth * tile_size / 2.0)
 	var floor_mat = StandardMaterial3D.new()
-	floor_mat.albedo_color = Color(0,0,0,0)
-	floor_mat.transparency = 1
+	floor_mat.albedo_color = Color(0,0,0,0); floor_mat.transparency = 1
 	base_floor.material_override = floor_mat
 	add_child(base_floor)
 	for pos in dungeon_grid.keys():
@@ -227,18 +221,14 @@ func refresh_visuals():
 					mat.metallic = 0.8
 					mat.roughness = 0.2
 				if digging_queue.has(pos):
-					mat.emission_enabled = true
-					mat.emission = Color(1.0, 0.5, 0)
-					mat.emission_energy_multiplier = 2.0
+					mat.emission_enabled = true; mat.emission = Color(1.0, 0.5, 0); mat.emission_energy_multiplier = 2.0
 				var static_body = StaticBody3D.new()
 				var collision_shape = CollisionShape3D.new()
 				var box_shape = BoxShape3D.new()
 				box_shape.size = Vector3(tile_size, 2.0, tile_size)
 				collision_shape.shape = box_shape
 				static_body.add_child(collision_shape)
-				mesh.material_override = mat
-				static_body.add_child(mesh)
-				add_child(static_body)
+				mesh.material_override = mat; static_body.add_child(mesh); add_child(static_body)
 				static_body.position = Vector3(pos.x * tile_size, 1.0, pos.y * tile_size)
 			TileType.EMPTY, TileType.CLAIMED, TileType.TREASURY, TileType.LIBRARY, TileType.BARRACKS, TileType.HATCHERY:
 				match type:
@@ -248,7 +238,6 @@ func refresh_visuals():
 					TileType.LIBRARY: mat.albedo_color = Color(0.0, 0.4, 0.8)
 					TileType.BARRACKS: mat.albedo_color = Color(0.1, 0.5, 0.1)
 					TileType.HATCHERY: mat.albedo_color = Color(0.6, 0.3, 0.0)
-				mesh.material_override = mat
-				add_child(mesh)
+				mesh.material_override = mat; add_child(mesh)
 				mesh.position = Vector3(pos.x * tile_size, box.size.y / 2.0, pos.y * tile_size)
 	grid_updated.emit()

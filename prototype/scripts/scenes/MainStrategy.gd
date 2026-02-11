@@ -9,6 +9,8 @@ extends Control
 @onready var sasuga_panel: Panel = $SasugaPanel
 @onready var guardian_panel: Panel = $GuardianPanel
 @onready var operations_panel: Panel = $OperationsPanel
+@onready var summary_panel: Panel = $TurnSummaryPanel
+@onready var summary_label: Label = %SummaryLabel
 @onready var target_label: Label = %TargetLabel
 
 var selected_territory = ""
@@ -17,9 +19,10 @@ func _ready():
 	# Update resource display initially
 	update_resource_display(GameManager.nazarick_state.resources)
 	
-	# Connect to GameManager signals to update the UI
+	# Connect to GameManager signals
 	GameManager.resources_updated.connect(_on_resources_updated)
 	GameManager.raid_started.connect(_on_raid_started)
+	GameManager.turn_ended.connect(_on_turn_ended)
 	
 	# Connect WorldMap
 	$WorldMap.territory_selected.connect(_on_territory_selected)
@@ -28,6 +31,18 @@ func _ready():
 	sasuga_panel.visible = false
 	guardian_panel.visible = false
 	operations_panel.visible = false
+	summary_panel.visible = false
+
+func _on_EndTurnButton_pressed():
+	GameManager.end_turn()
+
+func _on_turn_ended(t_num):
+	var res = GameManager.nazarick_state.resources
+	summary_label.text = "Turn %d Complete\nGold: %d | Souls: %d\nFood: %d" % [t_num - 1, res.gold, res.souls, res.food]
+	summary_panel.visible = true
+
+func _on_CloseSummaryButton_pressed():
+	summary_panel.visible = false
 
 func _on_territory_selected(t_name):
 	selected_territory = t_name

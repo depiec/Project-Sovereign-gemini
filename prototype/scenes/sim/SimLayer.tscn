@@ -28,36 +28,6 @@ navigation_mesh = SubResource("NavigationMesh_1")
 [node name="DungeonManager" type="Node3D" parent="NavigationRegion3D"]
 script = ExtResource("2_dman")
 
-[node name="Imp1" type="CharacterBody3D" parent="NavigationRegion3D/DungeonManager"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 1, 20)
-script = ExtResource("3_imp")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="NavigationRegion3D/DungeonManager/Imp1"]
-mesh = SubResource("CapsuleMesh_1")
-material_override = SubResource("StandardMaterial3D_Imp")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/DungeonManager/Imp1"]
-shape = SubResource("CapsuleShape3D_1")
-
-[node name="NavigationAgent3D" type="NavigationAgent3D" parent="NavigationRegion3D/DungeonManager/Imp1"]
-path_desired_distance = 0.5
-target_desired_distance = 0.5
-
-[node name="Imp2" type="CharacterBody3D" parent="NavigationRegion3D/DungeonManager"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 1, 22)
-script = ExtResource("3_imp")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="NavigationRegion3D/DungeonManager/Imp2"]
-mesh = SubResource("CapsuleMesh_1")
-material_override = SubResource("StandardMaterial3D_Imp")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/DungeonManager/Imp2"]
-shape = SubResource("CapsuleShape3D_1")
-
-[node name="NavigationAgent3D" type="NavigationAgent3D" parent="NavigationRegion3D/DungeonManager/Imp2"]
-path_desired_distance = 0.5
-target_desired_distance = 0.5
-
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.5, 0.866025, 0, -0.866025, 0.5, 20, 15, 35)
 current = true
@@ -70,7 +40,7 @@ shadow_enabled = true
 
 [node name="Panel" type="Panel" parent="UI"]
 offset_right = 200.0
-offset_bottom = 250.0
+offset_bottom = 300.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="UI/Panel"]
 layout_mode = 1
@@ -84,6 +54,12 @@ theme_override_constants/separation = 10
 [node name="Label" type="Label" parent="UI/Panel/VBoxContainer"]
 layout_mode = 2
 text = "Dungeon Management"
+horizontal_alignment = 1
+
+[node name="MinionCountLabel" type="Label" parent="UI/Panel/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Workers: 0 | Liches: 0"
 horizontal_alignment = 1
 
 [node name="DigModeButton" type="Button" parent="UI/Panel/VBoxContainer"]

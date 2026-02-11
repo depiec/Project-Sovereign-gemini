@@ -47,9 +47,70 @@ func _process(delta):
 			needs_bake = false
 			bake_timer = 0.0
 
+func generate_resources():
+	# Treasury produces small amount of gold per tile
+	if room_counts[TileType.TREASURY] > 0:
+		GameManager.add_resource("gold", room_counts[TileType.TREASURY] * 10)
+	
+	# Library produces MP per tile (Max MP is capped)
+	if room_counts[TileType.LIBRARY] > 0:
+		GameManager.player_state.mp = min(GameManager.player_state.mp + room_counts[TileType.LIBRARY], 1000)
+		print("Library generated MP. Current: ", GameManager.player_state.mp)
+
+func _ready():
+	setup_initial_grid()
+
+func setup_initial_grid():
+	for x in range(grid_width):
+		for z in range(grid_depth):
+			var pos = Vector2i(x, z)
+			# Start with a center room empty, others are walls
+			if x > 8 and x < 12 and z > 8 and z < 12:
+				dungeon_grid[pos] = TileType.CLAIMED
+			else:
+				dungeon_grid[pos] = TileType.WALL
+				wall_health[pos] = MAX_WALL_HEALTH
+	
+	refresh_visuals()
+
 func trigger_rebake():
 	needs_bake = true
 	bake_timer = 0.0
+
+func mark_for_digging(grid_pos: Vector2i):
+	if dungeon_grid.get(grid_pos) == TileType.WALL:
+		set_digging_mark(grid_pos, !digging_queue.has(grid_pos))
+
+func set_digging_mark(grid_pos: Vector2i, state: bool):
+	if dungeon_grid.get(grid_pos) != TileType.WALL: return
+	
+	if state and not digging_queue.has(grid_pos):
+		digging_queue.append(grid_pos)
+		refresh_visuals()
+	elif not state and digging_queue.has(grid_pos):
+		digging_queue.erase(grid_pos)
+		refresh_visuals()
+
+func damage_wall(grid_pos: Vector2i, amount: float):
+	if wall_health.has(grid_pos):
+		wall_health[grid_pos] -= amount
+		if wall_health[grid_pos] <= 0:
+			dig_tile(grid_pos)
+		else:
+			# Optional: Scale visual height or update highlight based on health
+			pass
+
+func is_adjacent_to_open_space(grid_pos: Vector2i) -> bool:
+	var neighbors = [
+		Vector2i(grid_pos.x + 1, grid_pos.y),
+		Vector2i(grid_pos.x - 1, grid_pos.y),
+		Vector2i(grid_pos.x, grid_pos.y + 1),
+		Vector2i(grid_pos.x, grid_pos.y - 1)
+	]
+	for n in neighbors:
+		if dungeon_grid.has(n) and dungeon_grid[n] != TileType.WALL:
+			return true
+	return false
 
 func dig_tile(grid_pos: Vector2i):
 	if dungeon_grid.get(grid_pos) == TileType.WALL:
@@ -64,6 +125,14 @@ func claim_tile(grid_pos: Vector2i):
 		refresh_visuals()
 		trigger_rebake()
 
+func slap_at(grid_pos: Vector2i):
+	# Find any worker at this position
+	for child in get_children():
+		if child.has_method("get_grid_pos") and child.get_grid_pos() == grid_pos:
+			if child.has_method("be_slapped"):
+				child.be_slapped()
+				print("Ainz-sama slapped a minion! Sasuga!")
+
 func build_room(grid_pos: Vector2i, type: TileType):
 	if dungeon_grid.get(grid_pos) == TileType.CLAIMED:
 		dungeon_grid[grid_pos] = type
@@ -71,11 +140,54 @@ func build_room(grid_pos: Vector2i, type: TileType):
 		refresh_visuals()
 		trigger_rebake()
 
+func update_room_counts():
+	# Reset counts
+	for key in room_counts.keys():
+		room_counts[key] = 0
+	
+	# Count
+	for type in dungeon_grid.values():
+		if room_counts.has(type):
+			room_counts[type] += 1
+	
+	stats_updated.emit(room_counts)
+	check_attraction()
+
+func check_attraction():
+	# Attract Imps (Basic workers) - 1 for every 15 claimed/room tiles
+	var total_built = 0
+	for type in dungeon_grid.values():
+		if type != TileType.WALL: total_built += 1
+	
+	var target_imps = 2 + (total_built / 15)
+	var current_imps = get_tree().get_nodes_in_group("workers").size()
+	
+	if current_imps < target_imps:
+		spawn_minion("res://scenes/sim/entities/Imp.tscn", "workers")
+
+	# Attract Elder Liches - 1 for every 20 Library tiles
+	var target_liches = room_counts[TileType.LIBRARY] / 20
+	var current_liches = get_tree().get_nodes_in_group("liches").size()
+	
+	if current_liches < target_liches:
+		spawn_minion("res://scenes/sim/entities/ElderLich.tscn", "liches")
+
+func spawn_minion(scene_path: String, group_name: String):
+	var scene = load(scene_path)
+	if not scene: return
+	
+	var minion = scene.instantiate()
+	add_child(minion)
+	minion.add_to_group(group_name)
+	# Spawn near center (10, 10)
+	minion.global_transform.origin = Vector3(10 * tile_size, 1.0, 10 * tile_size)
+	print("Nazarick attracted a new ", group_name, "!")
+
 func refresh_visuals():
 	# In a real game, this would update a GridMap. 
 	# For prototype, we'll use simple MeshInstances.
 	for child in get_children():
-		if child is MeshInstance3D or child is StaticBody3D: # Don't delete Imps!
+		if child is MeshInstance3D or child is StaticBody3D:
 			child.queue_free()
 	
 	# Add a base floor for the NavMesh to bake on
